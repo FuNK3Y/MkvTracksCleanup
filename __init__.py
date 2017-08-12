@@ -5,7 +5,7 @@ def autoload():
     return MkvTracksCleanup()
 
 folder_rename_options = {
-    'pre': '<',
+   'pre': '<',
    'post': '>',
    'choices': {
       'foldername': 'Folder name (defined by the renamer)',
