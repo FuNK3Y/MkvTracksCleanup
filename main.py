@@ -84,7 +84,7 @@ class MkvTracksCleanup(Plugin):
             log.info('Not a mkv, will be moved from '+m+' to '+targetPath)
             if not os.path.isdir(targetFolder):
                os.mkdir(targetFolder)
-            shutil.move(m,targetPath)
+            shutil.copy(m,targetPath)
          movedFiles.append(targetPath)
       if self.conf('remove_source_folder'):
          if returnCode == 0:
