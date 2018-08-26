@@ -5,23 +5,21 @@ import os
 import subprocess
 import re
 import shutil
+import json
 
 log = CPLog(__name__)
 
 class MkvTracksCleanup(Plugin):
    def __init__(self):
-      self.mkvmergeUILanguage='en' if os.name=='nt' else 'en_US'
       addEvent('renamer.after', self.callMkvTracksCleanup, priority = 90)
    def stringToList(self,s):
       return [i.strip().lower() for i in s.split(',')]
    def cleanupMkv(self, sourcePath, sourceFolder, renamerFileName):
       tracks=[]
       # Gather tracks infos
-      info=subprocess.check_output(['mkvmerge','--ui-language',self.mkvmergeUILanguage,'--identify-verbose',sourcePath])
-      for trackStr in info.split('\n'):
-         match=re.search(r'Track ID (\d+): (.+?) .+codec_id:(.+?) .+language:(.+?) ',trackStr)
-         if(match):
-            tracks.append({'Id':match.group(1),'Type':match.group(2),'Codec':match.group(3),'Language':match.group(4)})
+      info=json.loads(subprocess.check_output(['mkvmerge','--identification-format','json','--identify',sourcePath]))
+      for track in info['tracks']:
+         tracks.append({'Id':track['id'],'Type':track['type'],'Codec':track['properties']['codec_id'],'Language':track['properties']['language']})
 
       # Filter the tracks   
       filteredAudioTracks=[]
@@ -41,7 +39,7 @@ class MkvTracksCleanup(Plugin):
       if not os.path.isdir(targetFolder):
          os.mkdir(targetFolder)
       # Call the cleanup through mkvmerge
-      mkvmergeCall=['mkvmerge','--ui-language',self.mkvmergeUILanguage,'--output',targetPath,'--title',title]
+      mkvmergeCall=['mkvmerge','--output',targetPath,'--title',title]
       if len(filteredSubtitleTracks) > 0:
          mkvmergeCall+=["--subtitle-tracks",",".join(str(t['Id']) for t in filteredSubtitleTracks)]
       else:
